@@ -3,11 +3,12 @@ from .models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ['title', 'slug', 'author', 'published', 'status']
-    list_filter = ['status', 'published', 'author']
+    list_display = ['title', 'slug', 'author', 'publish', 'status']
+    list_filter = ['status', 'publish', 'author']
     search_fields = ['title', 'content']
     prepopulated_fields = {'slug': ('title',)}
     raw_id_fields = ['author']
-    date_hierarchy = 'published'
-    ordering = ['status', 'published']
+    date_hierarchy = 'publish'
+    ordering = ['status', 'publish']
     show_facets = admin.ShowFacets.ALWAYS
+

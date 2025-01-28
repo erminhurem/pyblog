@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Django na bosanskom{% endblock %}
+{% block content %}
+    <h1>Django na bosanskom</h1>
+    {% for post in posts %}
+        <h2>
+            <a href="{% url 'djblog:post_detail' post.id %}">
+                {{ post.title }}
+            </a>
+        </h2>
+        <p class="date">
+            Published {{ post.publish }} by {{ post.author }}
+        </p>
+        {{ post.content|truncatewords:30|linebreaks }}
+    {% endfor %}
+{% endblock %}
