@@ -1,17 +1,140 @@
 {% extends "base.html" %}
-{% block title %}Django na bosanskom{% endblock %}
+{% load static %}
+
 {% block content %}
-    <h1>Django na bosanskom</h1>
-    {% for post in posts %}
-        <h2>
-            <a href="{{post.get_absolute_url}}">
-                {{ post.title }}
-            </a>
-        </h2>
-        <p class="date">
-            Published {{ post.publish }} by {{ post.author }}
-        </p>
-        {{ post.content|truncatewords:30|linebreaks }}
-    {% endfor %}
+
+<main class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-6">Latest Blog Posts</h2>
+    
+    <div class="mb-6">
+        <input type="text" id="searchInput" placeholder="Search blogs..." 
+               class="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600">
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for post in posts %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-48 object-cover">
+                {% endif %}
+                <div class="p-4">
+                    <h3 class="text-xl font-semibold mb-2 dark:text-gray-300">
+                        <a href="{{ post.get_absolute_url }}" class="hover:text-accent transition-colors">{{ post.title }}</a>
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">{{ post.content|truncatewords:30 }}</p>
+                    <div class="flex justify-between items-center">
+                        <a href="{{ post.get_absolute_url }}" class="text-secondary hover:text-accent font-semibold transition-colors">Read More</a>
+                        <div class="flex items-center space-x-2">
+                            {% if user.is_authenticated %}
+                            <button class="like-button group flex items-center space-x-1 px-3 py-1 rounded-full {% if post.is_liked %}bg-pink-100 dark:bg-pink-900{% else %}bg-gray-100 dark:bg-gray-700{% endif %} transition-all duration-200"
+                                    data-post-id="{{ post.id }}"
+                                    data-liked="{{ post.is_liked|lower }}">
+                                <svg class="h-5 w-5 {% if post.is_liked %}text-pink-500{% else %}text-gray-400 group-hover:text-pink-500{% endif %} transition-colors duration-200" 
+                                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="like-count text-sm {% if post.is_liked %}text-pink-500{% else %}text-gray-500 group-hover:text-pink-500{% endif %} transition-colors duration-200">
+                                    {{ post.total_likes }}
+                                </span>
+                            </button>
+                            {% else %}
+                            <a href="{% url 'login' %}" class="flex items-center space-x-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-pink-100 dark:hover:bg-pink-900 transition-all duration-200">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="text-sm text-gray-500">{{ post.total_likes }}</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full text-center py-8">
+                <p class="text-gray-600 dark:text-gray-300">No blog posts found.</p>
+            </div>
+        {% endfor %}
+    </div>
     {% include "includes/pagination.html" with page=page_obj %}
+</main>
+    
+{% block extra_js %}
+<script>
+    // Like functionality
+    document.querySelectorAll('.like-button').forEach(button => {
+        button.addEventListener('click', async () => {
+            if (button.disabled) return;
+            button.disabled = true;
+
+            const postId = button.dataset.postId;
+            const likeCount = button.querySelector('.like-count');
+            const heartIcon = button.querySelector('svg');
+            
+            try {
+                const response = await fetch(`/like/${postId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // Update like count
+                    likeCount.textContent = data.likes;
+                    
+                    // Toggle liked state
+                    const isLiked = data.action === 'liked';
+                    button.dataset.liked = isLiked.toString();
+                    
+                    // Update styles
+                    if (isLiked) {
+                        button.classList.add('bg-pink-100', 'dark:bg-pink-900');
+                        button.classList.remove('bg-gray-100', 'dark:bg-gray-700');
+                        heartIcon.classList.add('text-pink-500');
+                        heartIcon.classList.remove('text-gray-400');
+                        likeCount.classList.add('text-pink-500');
+                        likeCount.classList.remove('text-gray-500');
+                    } else {
+                        button.classList.remove('bg-pink-100', 'dark:bg-pink-900');
+                        button.classList.add('bg-gray-100', 'dark:bg-gray-700');
+                        heartIcon.classList.remove('text-pink-500');
+                        heartIcon.classList.add('text-gray-400');
+                        likeCount.classList.remove('text-pink-500');
+                        likeCount.classList.add('text-gray-500');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating like:', error);
+            } finally {
+                button.disabled = false;
+            }
+        });
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const posts = document.querySelectorAll('.grid > div');
+    
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        posts.forEach(post => {
+            const title = post.querySelector('h3').textContent.toLowerCase();
+            const content = post.querySelector('p').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                post.style.display = '';
+            } else {
+                post.style.display = 'none';
+            }
+        });
+    });
+</script>
 {% endblock %}
+
+{% endblock %}
+
+
+
+
