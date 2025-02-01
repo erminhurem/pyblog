@@ -1,16 +1,51 @@
 {% load static %}
-<html>
-    <head>
-        <title>{% block title %}{% endblock %}</title>
-        <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    </head>
-    <body>
-        <div id="content">
-            {% block content %}{% endblock %}
-        </div>
-        <div id="sidebar">
-            <h2>My Blog</h2>
-            <p>This is my blog</p>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Blog</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white" 
+      x-data="{ darkMode: false, blogs: [], filteredBlogs: [], searchQuery: '' }" 
+      x-init="
+        
+        filteredBlogs = blogs;
+        darkMode = localStorage.getItem('darkMode') === 'true';
+        $watch('darkMode', value => localStorage.setItem('darkMode', value));
+        $watch('searchQuery', value => {
+            filteredBlogs = blogs.filter(blog => 
+                blog.title.toLowerCase().includes(value.toLowerCase()) || 
+                blog.description.toLowerCase().includes(value.toLowerCase())
+            );
+        })
+      "
+      :class="{ 'dark': darkMode }">
+      {% include "includes/header.html" %}
+      {% block content %}
+      {% endblock %}
+      {% include "includes/footer.html" %}
+      <script>
+        // Show blog post when hash changes
+        function showBlogPost() {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#blog-')) {
+                document.querySelectorAll('[id^="blog-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelector(hash).classList.remove('hidden');
+                document.querySelector('main').classList.add('hidden');
+            } else {
+                document.querySelectorAll('[id^="blog-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelector('main').classList.remove('hidden');
+            }
+        }
+
+        window.addEventListener('hashchange', showBlogPost);
+        showBlogPost();
+    </script>
+</body>
 </html>

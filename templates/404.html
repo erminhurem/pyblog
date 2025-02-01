@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Page not found{% endblock %}
+
+{% block content %}
+    <h1>Page not found</h1>
+    <p>Sorry, the page you requested could not be found.</p>
+    <p><a href="{% url 'djblog:post_list' %}">Return to blog homepage</a></p>
+{% endblock %}
