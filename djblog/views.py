@@ -5,7 +5,9 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
+from django.contrib.auth import login
 from .models import Post, Comment, PostLike
+from .forms import CustomUserCreationForm, UserProfileForm
 
 
 class PostListView(ListView):
@@ -34,24 +36,64 @@ def post_detail(request, year, month, day, post):
         'is_liked': is_liked
     })
 
+@login_required
 def add_comment(request, post_id):
     post = get_object_or_404(Post, id=post_id, status=Post.Status.PUBLISHED)
     
     if request.method == 'POST':
-        author = request.POST.get('author')
         content = request.POST.get('content')
         
-        if author and content:
+        if content:
             Comment.objects.create(
                 post=post,
-                author=author,
+                author=request.user.username,
                 content=content
             )
             messages.success(request, 'Your comment has been added successfully!')
         else:
-            messages.error(request, 'Please fill in all required fields.')
+            messages.error(request, 'Please enter your comment.')
     
     return redirect(post.get_absolute_url())
+
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    # Check if user is the author
+    if comment.author != request.user.username:
+        messages.error(request, 'You can only edit your own comments.')
+        return redirect(comment.post.get_absolute_url())
+    
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            comment.content = content
+            comment.save()
+            messages.success(request, 'Comment updated successfully!')
+        else:
+            messages.error(request, 'Comment cannot be empty.')
+        return redirect(comment.post.get_absolute_url())
+    
+    return JsonResponse({
+        'content': comment.content
+    })
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    # Check if user is the author
+    if comment.author != request.user.username:
+        messages.error(request, 'You can only delete your own comments.')
+        return redirect(comment.post.get_absolute_url())
+    
+    if request.method == 'POST':
+        post_url = comment.post.get_absolute_url()
+        comment.delete()
+        messages.success(request, 'Comment deleted successfully!')
+        return redirect(post_url)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @login_required
 def like_post(request, post_id):
@@ -71,4 +113,41 @@ def like_post(request, post_id):
             'action': action
         })
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect('djblog:post_list')
+        
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'Registration successful!')
+            return redirect('djblog:post_list')
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'registration/register.html', {'form': form})
+
+@login_required
+def user_profile(request):
+    user = request.user
+    comments = Comment.objects.filter(author=user.username).order_by('-created')
+    
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('djblog:user_profile')
+    else:
+        form = UserProfileForm(instance=user)
+    
+    context = {
+        'user': user,
+        'form': form,
+        'comments': comments,
+    }
+    return render(request, 'djblog/user_profile.html', context)
 

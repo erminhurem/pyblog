@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools %}
+    {% if has_add_permission %}
+        <ul class="object-tools">
+            <li>
+                <a href="{% url 'admin:djblog_post_engagement_stats' %}" class="addlink btn btn-success float-right mb-2">
+                    {% trans "View Engagement Stats" %}
+                </a>
+            </li>
+            {% block object-tools-items %}
+                {{ block.super }}
+            {% endblock %}
+        </ul>
+    {% endif %}
+{% endblock %} 

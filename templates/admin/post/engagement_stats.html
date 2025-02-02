@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/changelists.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='djblog' %}">{% trans 'Djblog' %}</a>
+    &rsaquo; <a href="{% url 'admin:djblog_post_changelist' %}">{% trans 'Posts' %}</a>
+    &rsaquo; {% trans 'Engagement Statistics' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module" style="margin: 20px;">
+        <h2 style="margin-bottom: 20px; color: #f1f4f5; font-size: 24px; font-weight: 600; text-align: center; padding: 15px; border-bottom: 2px solid #eee; border-radius: 8px; ">DJBlog Engagement Statistics</h2>
+
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <!-- Overview Stats -->
+            <div class="stats-card" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #417690; margin-bottom: 15px;">Overview</h3>
+                <div style="display: grid; gap: 10px;">
+                    <p><strong>Total Posts:</strong> {{ total_posts }}</p>
+                    <p><strong>Total Likes:</strong> {{ total_likes }}</p>
+                    <p><strong>Total Comments:</strong> {{ total_comments }}</p>
+                    <p><strong>Average Likes per Post:</strong> {{ avg_likes_per_post|floatformat:1 }}</p>
+                </div>
+            </div>
+
+            <!-- Most Engaged Posts -->
+            <div class="stats-card" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #417690; margin-bottom: 15px;">Most Engaged Posts</h3>
+                {% if most_liked_post %}
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #666; margin-bottom: 5px;">Most Liked Post</h4>
+                    <p><strong>Title:</strong> {{ most_liked_post.title }}</p>
+                    <p><strong>Likes:</strong> {{ most_liked_post.like_count }}</p>
+                </div>
+                {% endif %}
+                
+                {% if most_commented_post %}
+                <div>
+                    <h4 style="color: #666; margin-bottom: 5px;">Most Commented Post</h4>
+                    <p><strong>Title:</strong> {{ most_commented_post.title }}</p>
+                    <p><strong>Comments:</strong> {{ most_commented_post.comment_count }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="submit-row" style="margin-top: 20px; text-align: right;">
+            <a href="{% url 'admin:djblog_post_changelist' %}" class="btn btn-primary">
+                {% trans "Back to Posts" %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stats-card {
+        background: var(--body-bg);
+        border: 1px solid var(--hairline-color);
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .module h2 {
+        background: var(--primary);
+        color: var(--header-link-color);
+        padding: 8px;
+        font-size: 11px;
+        text-align: left;
+        font-weight: bold;
+    }
+</style>
+{% endblock %} 

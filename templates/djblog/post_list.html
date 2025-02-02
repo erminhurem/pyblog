@@ -38,8 +38,9 @@
                                 </span>
                             </button>
                             {% else %}
-                            <a href="{% url 'login' %}" class="flex items-center space-x-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-pink-100 dark:hover:bg-pink-900 transition-all duration-200">
+                            <a href="{% url 'djblog:login' %}" class="flex items-center space-x-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-pink-100 dark:hover:bg-pink-900 transition-all duration-200">
                                 <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+
                                     <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
                                 </svg>
                                 <span class="text-sm text-gray-500">{{ post.total_likes }}</span>
