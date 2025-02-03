@@ -40,9 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
     'django.contrib.staticfiles',
+    'taggit',
     'djblog',
 ]
+
+SITE_ID = 1
 
 LOGIN_REDIRECT_URL = 'djblog:post_list'
 LOGOUT_REDIRECT_URL = 'djblog:post_list'

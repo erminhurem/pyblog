@@ -6,8 +6,10 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.contrib.auth import login
+from taggit.models import Tag
 from .models import Post, Comment, PostLike
 from .forms import CustomUserCreationForm, UserProfileForm
+from django.db import models
 
 
 class PostListView(ListView):
@@ -15,7 +17,18 @@ class PostListView(ListView):
     queryset = Post.published.all()
     context_object_name = 'posts'
     paginate_by = 6
-    template_name = 'djblog/post_list.html'
+    template_name = 'djblog/post_list.html'   
+    
+    def get_queryset(self):
+        queryset = Post.published.all()
+        tag_slug = self.kwargs.get('tag_slug')
+        if tag_slug:
+            try:
+                tag = get_object_or_404(Tag, slug=tag_slug)
+                queryset = queryset.filter(tags__in=[tag])
+            except Tag.DoesNotExist:
+                return Post.published.none()
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -24,16 +37,33 @@ class PostListView(ListView):
             user_likes = {like.post_id: True for like in PostLike.objects.filter(user=self.request.user)}
             for post in context['posts']:
                 post.is_liked = user_likes.get(post.id, False)
+        
+        # Add tag information if we're filtering by tag
+        tag_slug = self.kwargs.get('tag_slug')
+        if tag_slug:
+            try:
+                tag = get_object_or_404(Tag, slug=tag_slug)
+                context['current_tag'] = tag
+            except Tag.DoesNotExist:
+                pass
+        
         return context
 
 def post_detail(request, year, month, day, post):
     post = get_object_or_404(Post, slug=post, status=Post.Status.PUBLISHED, publish__year=year, publish__month=month, publish__day=day)
     comments = post.comments.filter(active=True)
     is_liked = post.is_liked_by(request.user) if request.user.is_authenticated else False
+    
+    # List of similar posts
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
+    similar_posts = similar_posts.annotate(same_tags=models.Count('tags')).order_by('-same_tags', '-publish')[:3]
+    
     return render(request, 'djblog/post_detail.html', {
         'post': post,
         'comments': comments,
-        'is_liked': is_liked
+        'is_liked': is_liked,
+        'similar_posts': similar_posts
     })
 
 @login_required

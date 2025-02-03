@@ -1,9 +1,17 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 from . import views
 from .forms import CustomAuthenticationForm
+from .sitemaps import PostSitemap
+from .feeds import LatestPostsFeed
 
 app_name = 'djblog'
+
+sitemaps = {
+    'posts': PostSitemap,
+}
+
 
 urlpatterns = [
     path('', views.PostListView.as_view(), name='post_list'),
@@ -12,7 +20,9 @@ urlpatterns = [
     path('comment/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
     path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
     path('like/<int:post_id>/', views.like_post, name='like_post'),
-    
+    path('tag/<slug:tag_slug>/', views.PostListView.as_view(), name='posts_by_tag'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('feed/', LatestPostsFeed(), name='post_feed'),
     # Authentication URLs
     path('login/', auth_views.LoginView.as_view(
         template_name='registration/login.html',

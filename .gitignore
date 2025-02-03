@@ -20,7 +20,7 @@ venv/
 .venv/
 env/
 ENV/
-
+.env
 # Node
 node_modules/
 package-lock.json
