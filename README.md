@@ -15,7 +15,6 @@ A feature-rich blogging platform built with Django and Tailwind CSS, featuring a
 - 💬 Interactive commenting system
 - ❤️ Post likes with real-time updates
 - 🔍 Full-text search functionality
-- 🌓 Dark mode support
 - 📱 Mobile-friendly interface
 - 🔄 Similar posts suggestions
 - 🔗 Social sharing capabilities
