@@ -25,7 +25,7 @@ A feature-rich blogging platform built with Django and Tailwind CSS, featuring a
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/pyblog.git
+git clone https://github.com/erminhurem/pyblog.git
 cd pyblog
 ```
 
